@@ -1,12 +1,13 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { MAX_IMAGES_PER_RESOURCE } from "@/lib/resource-images";
 import { deleteResourceImages, uploadResourceImage } from "@/lib/storage";
 import { requireAdmin } from "@/server/auth/session";
+import { CATALOG_TAG } from "@/server/catalog/queries";
 
 import {
   parseResourceForm,
@@ -26,6 +27,16 @@ import {
 
 const LIST_PATH = "/admin/ressources";
 const detailPath = (id: string) => `${LIST_PATH}/${id}`;
+
+/**
+ * Après toute modification d'une ressource : rafraîchit les pages du
+ * back-office et vide le cache du catalogue public (visible immédiatement).
+ */
+function refreshResourceViews(resourceId?: string) {
+  updateTag(CATALOG_TAG);
+  revalidatePath(LIST_PATH);
+  if (resourceId) revalidatePath(detailPath(resourceId));
+}
 
 export type ResourceFormState = {
   values?: ResourceFormValues;
@@ -60,15 +71,14 @@ export async function saveResource(
 
   if (!resourceId) {
     const resource = await createResource(parsed.data);
-    revalidatePath(LIST_PATH);
+    refreshResourceViews();
     redirect(`${detailPath(resource.id)}?creee=1`);
   }
 
   const updated = await updateResource(resourceId, parsed.data);
   if (!updated) return { values, error: "Cette ressource n'existe plus." };
 
-  revalidatePath(LIST_PATH);
-  revalidatePath(detailPath(resourceId));
+  refreshResourceViews(resourceId);
   return { values, success: "Modifications enregistrées." };
 }
 
@@ -78,8 +88,7 @@ export async function toggleResourceActive(
 ): Promise<void> {
   await requireAdmin();
   await setResourceActive(resourceId, active);
-  revalidatePath(LIST_PATH);
-  revalidatePath(detailPath(resourceId));
+  refreshResourceViews(resourceId);
 }
 
 export type SimpleState = { error?: string; success?: string };
@@ -105,7 +114,7 @@ export async function deleteResourceAction(
   await deleteResourceImages(result.images).catch((error: unknown) =>
     console.error(error),
   );
-  revalidatePath(LIST_PATH);
+  refreshResourceViews();
   redirect(`${LIST_PATH}?supprimee=1`);
 }
 
@@ -143,7 +152,7 @@ export async function uploadResourceImageAction(
     };
   }
 
-  revalidatePath(detailPath(resourceId));
+  refreshResourceViews(resourceId);
   return { success: "Photo ajoutée." };
 }
 
@@ -159,5 +168,5 @@ export async function removeResourceImageAction(
       console.error(error),
     );
   }
-  revalidatePath(detailPath(resourceId));
+  refreshResourceViews(resourceId);
 }

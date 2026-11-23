@@ -2,7 +2,9 @@ import "dotenv/config";
 
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3000;
+// Port dédié aux tests : ne réutilise jamais par erreur un `npm run dev`
+// ouvert sur le port 3000 pendant le développement.
+const PORT = 3100;
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -27,9 +29,14 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
   ],
   webServer: {
-    command: "npm run dev",
+    // Par défaut, tests sur le build de production : pages déjà compilées,
+    // donc rapides et stables, et comportement identique à la mise en ligne.
+    // E2E_DEV=1 pour tester sur le serveur de développement.
+    command: process.env.E2E_DEV
+      ? `npm run dev -- -p ${PORT}`
+      : `npm run build && npm run start -- -p ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 300_000,
   },
 });

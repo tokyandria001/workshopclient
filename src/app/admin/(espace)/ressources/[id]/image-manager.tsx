@@ -42,7 +42,7 @@ export function ImageManager({
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {images.map((image, index) => (
             <li key={image.path} className="flex flex-col gap-2">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-md border bg-muted">
+              <div className="relative aspect-4/3 overflow-hidden rounded-md border bg-muted">
                 <Image
                   src={image.url}
                   alt={`${resourceName} – photo ${index + 1}`}

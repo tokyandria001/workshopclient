@@ -26,6 +26,12 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - Formulaires : éviter les champs contrôlés (`value`) dans un `<form action>` : React 19 réinitialise le formulaire après l'envoi. Utiliser `defaultValue` alimenté par les valeurs renvoyées par l'action.
 - Modifications concurrentes : préférer une requête SQL atomique unique à une transaction interactive (base distante via le pooler, délai de 5 s).
 
+## Catalogue public et cache (Next.js 16)
+
+- Lectures publiques dans `src/server/catalog/queries.ts` : `"use cache"` + `cacheTag(CATALOG_TAG)` + `cacheLife("hours")`, champs publics uniquement.
+- **Toute action du back-office qui modifie une ressource doit appeler `updateTag(CATALOG_TAG)`** (via `refreshResourceViews()` dans `src/server/resources/actions.ts`) : le site est à jour immédiatement.
+- Données dépendant de l'URL (`params`, `searchParams`) ou de la session : les lire dans un composant sous `<Suspense>`. `notFound()` dans une zone streamée renvoie un statut 200 : tester le contenu affiché, pas le code HTTP.
+
 ## Stockage des fichiers (Supabase Storage)
 
 - `src/lib/storage.ts` (serveur uniquement, clé secrète). La base stocke le **chemin** dans le bucket, jamais l'URL ; URL publique via `resourceImageUrl()`.
@@ -46,6 +52,8 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 ## Commandes de vérification
 
 Avant de terminer une étape : `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, `npm run build`.
+
+Les tests e2e tournent sur le build de production, port 3100 (un `npm run dev` sur le port 3000 n'est pas réutilisé). `E2E_DEV=1` pour tester sur le serveur de développement.
 
 Toujours lancer Vitest via `npm run test` (et non `npx vitest`) : voir la remarque Windows du README.
 

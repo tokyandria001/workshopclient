@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,24 +19,38 @@ export default function HomePage() {
           Louez notre salle de spectacle et du matériel événementiel en ligne.
         </p>
         <div>
-          <Button size="lg" disabled>
-            Réserver (bientôt disponible)
+          <Button size="lg" asChild>
+            <Link href="/catalogue">Voir le catalogue</Link>
           </Button>
         </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <Card>
+        <Card className="relative">
           <CardHeader>
-            <CardTitle>La salle</CardTitle>
+            <CardTitle>
+              <Link
+                href="/catalogue?type=salle"
+                className="after:absolute after:inset-0 hover:underline"
+              >
+                La salle
+              </Link>
+            </CardTitle>
             <CardDescription>
               Un espace de 550 m² pour vos spectacles et événements.
             </CardDescription>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="relative">
           <CardHeader>
-            <CardTitle>Le matériel</CardTitle>
+            <CardTitle>
+              <Link
+                href="/catalogue?type=materiel"
+                className="after:absolute after:inset-0 hover:underline"
+              >
+                Le matériel
+              </Link>
+            </CardTitle>
             <CardDescription>
               Du matériel disponible à la location pour vos projets.
             </CardDescription>
