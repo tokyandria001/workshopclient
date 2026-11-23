@@ -354,7 +354,7 @@ export function ReservationForm({ resources, today, preselectedId }: Props) {
           </Field>
         </div>
         {/* Piège à robots : invisible et ignoré par les humains. */}
-        <div aria-hidden="true" className="absolute -left-[9999px]">
+        <div aria-hidden="true" className="absolute left-[-9999px]">
           <label htmlFor={HONEYPOT_FIELD}>Ne pas remplir</label>
           <input
             id={HONEYPOT_FIELD}
