@@ -1,0 +1,219 @@
+// Schéma de la base de données – voir docs/SPECIFICATIONS.md, section 8.
+// Règles : montants en centimes (Int), dates de réservation en dates
+// calendaires (@db.Date), interprétées dans le fuseau Europe/Paris.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Énumérations ────────────────────────────────────────────────────────────
+
+enum ResourceType {
+  SALLE
+  MATERIEL
+}
+
+enum PriceUnit {
+  JOUR
+  FORFAIT
+}
+
+enum ReservationStatus {
+  EN_ATTENTE
+  A_PAYER
+  EXPIREE
+  CONFIRMEE
+  EN_COURS
+  TERMINEE
+  REFUSEE
+  ANNULEE
+}
+
+enum PaymentStatus {
+  EN_ATTENTE
+  PAYE
+  ECHOUE
+  REMBOURSE
+}
+
+enum DocumentType {
+  CONTRAT
+  RECU
+}
+
+// ─── Back-office ─────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
+
+// ─── Catalogue ───────────────────────────────────────────────────────────────
+
+model Resource {
+  id            String            @id @default(cuid())
+  type          ResourceType
+  name          String
+  description   String
+  images        String[]
+  priceCents    Int
+  priceUnit     PriceUnit
+  depositCents  Int               @default(0)
+  quantityTotal Int               @default(1)
+  active        Boolean           @default(true)
+  items         ReservationItem[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([active, type])
+}
+
+// ─── Réservations ────────────────────────────────────────────────────────────
+
+model Customer {
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String
+  phone        String
+  organization String?
+  reservations Reservation[]
+  createdAt    DateTime      @default(now())
+
+  @@index([email])
+}
+
+model Reservation {
+  id              String            @id @default(cuid())
+  reference       String            @unique
+  accessToken     String            @unique
+  customer        Customer          @relation(fields: [customerId], references: [id])
+  customerId      String
+  startDate       DateTime          @db.Date
+  endDate         DateTime          @db.Date
+  status          ReservationStatus @default(EN_ATTENTE)
+  /// Date limite de paiement, fixée à l'acceptation (délai géré par l'application, pas par Stripe).
+  paymentDueAt    DateTime?
+  checkedOutAt    DateTime?
+  returnedAt      DateTime?
+  totalCents      Int
+  depositCents    Int
+  message         String?
+  adminNote       String?
+  termsAcceptedAt DateTime
+  items           ReservationItem[]
+  payments        Payment[]
+  documents       Document[]
+  history         StatusChange[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([customerId])
+}
+
+model ReservationItem {
+  id             String      @id @default(cuid())
+  reservation    Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationId  String
+  resource       Resource    @relation(fields: [resourceId], references: [id])
+  resourceId     String
+  quantity       Int
+  unitPriceCents Int
+  subtotalCents  Int
+
+  @@index([reservationId])
+  @@index([resourceId])
+}
+
+model StatusChange {
+  id            String             @id @default(cuid())
+  reservation   Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  reservationId String
+  fromStatus    ReservationStatus?
+  toStatus      ReservationStatus
+  /// E-mail de l'administrateur, ou "systeme" pour les transitions automatiques.
+  author        String
+  /// Motif de refus ou d'annulation, remarque de restitution…
+  comment       String?
+  createdAt     DateTime           @default(now())
+
+  @@index([reservationId, createdAt])
+}
+
+// ─── Paiements et documents ──────────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(cuid())
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  reservationId   String
+  stripeSessionId String        @unique
+  amountCents     Int
+  status          PaymentStatus @default(EN_ATTENTE)
+  paidAt          DateTime?
+  /// Expiration de la session Stripe (≤ 24 h), distincte de Reservation.paymentDueAt.
+  expiresAt       DateTime
+  /// Paiement reçu sur une réservation qui n'était plus A_PAYER : à rembourser manuellement.
+  needsRefund     Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+
+  @@index([reservationId])
+}
+
+model Document {
+  id            String       @id @default(cuid())
+  reservation   Reservation  @relation(fields: [reservationId], references: [id])
+  reservationId String
+  type          DocumentType
+  number        String       @unique
+  /// Chemin dans le bucket privé. Jamais d'URL publique : téléchargement par URL signée.
+  storageKey    String
+  createdAt     DateTime     @default(now())
+
+  @@unique([reservationId, type])
+}
+
+/// Compteur de numérotation séquentielle par type et par année (CTR-2027-0001…).
+model DocumentCounter {
+  type  DocumentType
+  year  Int
+  value Int          @default(0)
+
+  @@id([type, year])
+}
+
+// ─── Vitrine et paramètres ───────────────────────────────────────────────────
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String
+  updatedAt DateTime @updatedAt
+}
+
+model NewsPost {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  imageUrl    String?
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([published, publishedAt])
+}
+
+model Setting {
+  key   String @id
+  value String
+}

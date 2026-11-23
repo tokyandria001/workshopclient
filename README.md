@@ -20,10 +20,14 @@ Next.js 16 (App Router) · TypeScript strict · Tailwind CSS 4 · shadcn/ui · V
 ## Installation
 
 ```bash
-npm install
+npm install                       # génère aussi le client Prisma
 npx playwright install chromium   # navigateur pour les tests e2e
 cp .env.example .env              # puis renseigner les valeurs
+npm run db:deploy                 # applique les migrations
+npm run db:seed                   # admin, salle, matériels et pages par défaut
 ```
+
+La base de données est un PostgreSQL hébergé chez Supabase (région West EU – Irlande). Dans le tableau de bord Supabase, bouton **Connect** → onglet **ORMs** → **Prisma** : copier `DATABASE_URL` (port 6543) et `DIRECT_URL` (port 5432) dans `.env`.
 
 ## Commandes
 
@@ -39,11 +43,16 @@ cp .env.example .env              # puis renseigner les valeurs
 | `npm run test`         | Tests unitaires (Vitest)                                   |
 | `npm run test:watch`   | Tests unitaires en mode surveillance                       |
 | `npm run test:e2e`     | Tests de bout en bout (Playwright, mobile 360 px + bureau) |
+| `npm run db:migrate`   | Crée et applique une migration (développement)             |
+| `npm run db:deploy`    | Applique les migrations existantes (production)            |
+| `npm run db:seed`      | Insère les données de départ (relançable sans doublons)    |
+| `npm run db:studio`    | Ouvre Prisma Studio pour consulter les données             |
 
 ## Structure
 
 ```
 docs/            Spécifications et documentation du projet
+prisma/          Schéma, migrations et seed de la base de données
 scripts/         Scripts utilitaires (lanceur Vitest)
 src/app/(public) Pages du site public
 src/app/admin    Back-office

@@ -11,6 +11,15 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - Mobile first : styles de base pour mobile, puis `sm:` / `md:` / `lg:`. Aucune page ne doit défiler horizontalement à 360 px.
 - Logique métier dans `src/server/`, indépendante des pages et testée unitairement. Toute donnée entrante validée avec Zod côté serveur.
 - Montants en centimes (entiers). Dates de réservation = dates calendaires, fuseau `Europe/Paris`.
+
+## Base de données (Prisma 7 + Supabase)
+
+- Schéma : `prisma/schema.prisma`. Client généré dans `src/generated/prisma` (ignoré par Git, régénéré par `postinstall`). Importer `prisma` depuis `@/lib/prisma` (serveur uniquement), les types depuis `@/generated/prisma/client`.
+- `DATABASE_URL` (pooler, port 6543) pour l'application ; `DIRECT_URL` (port 5432) pour la CLI Prisma (`prisma.config.ts`).
+- Après chaque modification du schéma : `npm run db:migrate -- --name <nom>`.
+- **Toute nouvelle table** doit recevoir `ALTER TABLE "<Table>" ENABLE ROW LEVEL SECURITY;` dans sa migration (défense en profondeur, voir la migration `enable_rls`).
+- Seed idempotent (`upsert` avec `update: {}`) : ne jamais écraser des données modifiées depuis le back-office.
+- Ne jamais lancer `prisma migrate reset` ni `db push --force-reset` sans l'accord explicite du développeur.
 - Composants shadcn/ui ajoutés avec `npx shadcn@latest add <composant>` dans `src/components/ui/`.
 - Une branche par étape (`etape-N-<nom>`), commits conventionnels en français (`feat: …`, `fix: …`, `test: …`, `docs: …`, `chore: …`).
 
