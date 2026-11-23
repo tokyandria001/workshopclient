@@ -1,9 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 
 import { requireAdmin } from "@/server/auth/session";
+import {
+  sendReservationAccepted,
+  sendReservationRefused,
+} from "@/server/notifications/reservation-notifications";
 
 import { applyTransition } from "./transition-service";
 import { STATUS_LABELS } from "./status";
@@ -40,6 +45,13 @@ export async function runReservationAction(
   if (!result.ok) return { error: result.error };
 
   // Tableau de bord, liste, fiche et planning dépendent du statut.
+  // E-mails au client, envoyés après la réponse (section 6.4).
+  if (parsedAction.data === "accepter") {
+    after(() => sendReservationAccepted(reservationId));
+  } else if (parsedAction.data === "refuser") {
+    after(() => sendReservationRefused(reservationId, comment.trim()));
+  }
+
   revalidatePath("/admin", "layout");
   return { success: `Statut mis à jour : ${STATUS_LABELS[result.to]}.` };
 }

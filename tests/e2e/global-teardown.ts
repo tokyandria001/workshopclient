@@ -5,6 +5,8 @@
 
 import "dotenv/config";
 
+import { rm } from "node:fs/promises";
+
 import { createClient } from "@supabase/supabase-js";
 import { Client } from "pg";
 
@@ -13,6 +15,9 @@ import { RESOURCE_BUCKET } from "../../src/lib/resource-images";
 const TEST_EMAILS = "test-e2e-%@example.com";
 
 export default async function globalTeardown() {
+  // E-mails capturés pendant les tests.
+  await rm(".emails-test", { recursive: true, force: true });
+
   if (!process.env.DIRECT_URL) return;
 
   const db = new Client({ connectionString: process.env.DIRECT_URL });

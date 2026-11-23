@@ -12,6 +12,7 @@ import type { ReservationStatus } from "../../src/generated/prisma/enums";
 
 export type TestReservation = {
   id: string;
+  email: string;
   reference: string;
   lastName: string;
 };
@@ -33,6 +34,7 @@ export async function createTestReservation(options: {
     const id = `e2e-${randomUUID()}`;
     const reference = `E2E-${suffix.toUpperCase()}`;
     const lastName = `${options.label} ${suffix}`;
+    const email = `test-e2e-${suffix}@example.com`;
     const resourceId = options.resourceId ?? "seed-micro";
     const quantity = options.quantity ?? 1;
 
@@ -40,7 +42,7 @@ export async function createTestReservation(options: {
     await db.query(
       `INSERT INTO "Customer" ("id", "firstName", "lastName", "email", "phone")
        VALUES ($1, 'Test', $2, $3, '0600000000')`,
-      [customerId, lastName, `test-e2e-${suffix}@example.com`],
+      [customerId, lastName, email],
     );
     await db.query(
       `INSERT INTO "Reservation" ("id", "reference", "accessToken", "customerId",
@@ -70,7 +72,7 @@ export async function createTestReservation(options: {
       [`e2e-${randomUUID()}`, id, options.status],
     );
     await db.query("COMMIT");
-    return { id, reference, lastName };
+    return { id, email, reference, lastName };
   } catch (error) {
     await db.query("ROLLBACK");
     throw error;

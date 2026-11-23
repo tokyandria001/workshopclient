@@ -49,3 +49,7 @@ next-env.d.ts
 
 # prisma (client généré)
 /src/generated/
+
+# e-mails écrits sur disque (mode "fichier")
+/.emails/
+/.emails-test/

@@ -30,6 +30,8 @@ npm run storage:setup             # crée le bucket des photos
 
 La base de données est un PostgreSQL hébergé chez Supabase (région West EU – Irlande). Dans le tableau de bord Supabase, bouton **Connect** → onglet **ORMs** → **Prisma** : copier `DATABASE_URL` (port 6543) et `DIRECT_URL` (port 5432) dans `.env`.
 
+Les e-mails partent via Resend (`RESEND_API_KEY`, `EMAIL_FROM`). Sans clé, en développement, ils sont écrits en JSON dans `.emails/` (consultables sans rien envoyer).
+
 Les photos sont stockées dans Supabase Storage (bucket public `ressources`). `STORAGE_URL` = URL du projet (`https://xxxx.supabase.co`) ; `STORAGE_KEY` = clé secrète (**Project Settings** → **API Keys** → **Secret keys**, `sb_secret_…`), utilisée uniquement côté serveur.
 
 ## Commandes

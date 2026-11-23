@@ -69,7 +69,7 @@ export async function getAvailability(
 }
 
 export type CreateResult =
-  | { ok: true; accessToken: string; reference: string }
+  | { ok: true; id: string; accessToken: string; reference: string }
   | {
       ok: false;
       unavailable: { name: string; requested: number; available: number }[];
@@ -142,7 +142,7 @@ export async function createReservationRequest(
       const accessToken = randomBytes(32).toString("base64url");
       const reference = generateReference(request.startDate);
 
-      await tx.reservation.create({
+      const created = await tx.reservation.create({
         data: {
           reference,
           accessToken,
@@ -179,7 +179,7 @@ export async function createReservationRequest(
           },
         },
       });
-      return { ok: true, accessToken, reference };
+      return { ok: true, id: created.id, accessToken, reference };
     },
     // Base distante (Irlande) via le pooler : marge au-delà des 5 s par défaut,
     // notamment quand une demande attend le verrou d'une autre.

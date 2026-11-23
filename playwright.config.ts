@@ -5,6 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
 // Port dédié aux tests : ne réutilise jamais par erreur un `npm run dev`
 // ouvert sur le port 3000 pendant le développement.
 const PORT = 3100;
+// Dossier des e-mails capturés (lu par tests/e2e/outbox.ts).
+const EMAIL_OUTBOX_DIR = ".emails-test";
 const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
@@ -38,5 +40,13 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
+    env: {
+      ...process.env,
+      // E-mails écrits sur disque (jamais envoyés) pour que les tests en
+      // vérifient le contenu et les liens.
+      EMAIL_DELIVERY: "fichier",
+      EMAIL_OUTBOX_DIR: EMAIL_OUTBOX_DIR,
+      APP_URL: baseURL,
+    } as Record<string, string>,
   },
 });

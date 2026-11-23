@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 
 import { isDateOnly, todayInParis } from "@/lib/dates";
+import { sendReservationReceived } from "@/server/notifications/reservation-notifications";
 
 import { validatePeriod } from "./rules";
 import { readReservationForm, reservationRequestSchema } from "./schema";
@@ -71,6 +73,11 @@ export async function submitReservation(
       }),
     };
   }
+
+  // E-mail « demande reçue » envoyé après la réponse : le visiteur n'attend
+  // pas, et un échec d'envoi ne bloque pas la demande.
+  const reservationId = result.id;
+  after(() => sendReservationReceived(reservationId));
 
   redirect(`/suivi/${result.accessToken}?nouvelle=1`);
 }

@@ -47,6 +47,13 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - **Tout changement de statut passe par `applyTransition()`** (`transition-service.ts`) : verrou de la réservation, contrôle de la transition, effets (délai de paiement, dates de sortie/restitution), revérification du stock à l'acceptation, historique. Ne jamais modifier `Reservation.status` ailleurs.
 - Délai de paiement : paramètre `paiement.delaiHeures` (table Setting), 72 h par défaut.
 
+## E-mails (Resend + React Email)
+
+- Modèles purs dans `src/emails/` (données déjà formatées, testés dans `tests/unit/emails.test.tsx`). Envoi par `sendEmail()` (`src/lib/email.ts`), qui ne lève jamais d'exception.
+- Déclenchement dans les actions serveur avec `after()` : après la réponse, jamais dans la transaction ; un échec d'envoi ne bloque pas l'action.
+- Modes (`EMAIL_DELIVERY`) : `resend` (si `RESEND_API_KEY`), `fichier` (local, `.emails/`), `console` (production sans clé). Les tests e2e lisent `.emails-test/` (`tests/e2e/outbox.ts`).
+- Liens absolus construits avec `APP_URL`.
+
 ## Stockage des fichiers (Supabase Storage)
 
 - `src/lib/storage.ts` (serveur uniquement, clé secrète). La base stocke le **chemin** dans le bucket, jamais l'URL ; URL publique via `resourceImageUrl()`.
