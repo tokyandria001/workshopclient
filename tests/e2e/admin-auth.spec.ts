@@ -1,21 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-const email = process.env.SEED_ADMIN_EMAIL ?? "";
-const password = process.env.SEED_ADMIN_PASSWORD ?? "";
-
-// Connexion = action serveur + base Supabase + vérification bcrypt : plus lent
-// que le délai par défaut de 5 s, surtout au premier appel en mode dev.
-const LOGIN_TIMEOUT = { timeout: 15_000 };
-
-async function fillLogin(
-  page: Page,
-  loginEmail: string,
-  loginPassword: string,
-) {
-  await page.getByLabel("E-mail").fill(loginEmail);
-  await page.getByLabel("Mot de passe").fill(loginPassword);
-  await page.getByRole("button", { name: "Se connecter" }).click();
-}
+import {
+  adminEmail as email,
+  adminPassword as password,
+  fillLogin,
+  SERVER_TIMEOUT as LOGIN_TIMEOUT,
+} from "./helpers";
 
 test.describe("Authentification du back-office", () => {
   test.beforeAll(() => {

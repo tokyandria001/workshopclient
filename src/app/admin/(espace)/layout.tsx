@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { logout } from "@/server/auth/actions";
 import { requireAdmin } from "@/server/auth/session";
 
+import { AdminNav, CurrentAdminNav } from "./admin-nav";
+
 export default function AdminLayout({
   children,
 }: {
@@ -28,6 +30,11 @@ export default function AdminLayout({
             </form>
           </div>
         </div>
+        {/* usePathname() (lien actif) impose une frontière Suspense ;
+            le repli affiche les mêmes liens, sans mise en évidence. */}
+        <Suspense fallback={<AdminNav pathname={null} />}>
+          <CurrentAdminNav />
+        </Suspense>
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         {children}

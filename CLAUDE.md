@@ -19,6 +19,19 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - Pages du back-office dans `src/app/admin/(espace)/` (en-tête + déconnexion) ; la page de connexion est hors de ce groupe.
 - Session JWT de 8 h, `AUTH_SECRET` obligatoire dans `.env`.
 
+## Organisation du code métier
+
+- Un dossier par domaine dans `src/server/<domaine>/` : `schema.ts` (Zod + libellés, sans accès serveur, testable), `service.ts` (accès aux données, `server-only`, sans contrôle d'accès), `actions.ts` (actions serveur : `requireAdmin()` puis validation puis service).
+- Montants saisis en euros, convertis avec `src/lib/money.ts`.
+- Formulaires : éviter les champs contrôlés (`value`) dans un `<form action>` : React 19 réinitialise le formulaire après l'envoi. Utiliser `defaultValue` alimenté par les valeurs renvoyées par l'action.
+- Modifications concurrentes : préférer une requête SQL atomique unique à une transaction interactive (base distante via le pooler, délai de 5 s).
+
+## Stockage des fichiers (Supabase Storage)
+
+- `src/lib/storage.ts` (serveur uniquement, clé secrète). La base stocke le **chemin** dans le bucket, jamais l'URL ; URL publique via `resourceImageUrl()`.
+- Photos : bucket public `ressources` (`npm run storage:setup`). Les PDF de l'étape 9 iront dans un bucket **privé**.
+- Les tests e2e nomment leurs données `Test e2e …` : elles sont supprimées par `tests/e2e/global-teardown.ts`.
+
 ## Base de données (Prisma 7 + Supabase)
 
 - Schéma : `prisma/schema.prisma`. Client généré dans `src/generated/prisma` (ignoré par Git, régénéré par `postinstall`). Importer `prisma` depuis `@/lib/prisma` (serveur uniquement), les types depuis `@/generated/prisma/client`.
