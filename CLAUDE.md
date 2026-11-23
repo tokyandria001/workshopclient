@@ -14,10 +14,11 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 
 ## Authentification du back-office (Auth.js v5)
 
-- `src/proxy.ts` ne fait qu'une redirection rapide (cookie uniquement) : **ce n'est pas une protection suffisante**.
+- `src/proxy.ts` ne fait qu'une redirection rapide (cookie uniquement) : **ce n'est pas une protection suffisante**. Il LIT le cookie avec `getToken` et ne doit **jamais** le réécrire (ne pas réutiliser le wrapper `auth()` d'Auth.js dans le proxy : il renvoie le cookie à chaque requête, ce qui peut recréer la session après une déconnexion).
 - **Chaque page, action serveur et route du back-office doit appeler `requireAdmin()`** (`@/server/auth/session`) avant toute lecture ou écriture. Dans une page, l'appeler dans un composant placé sous `<Suspense>` (exigence de Next.js 16 avec `cacheComponents`).
 - Pages du back-office dans `src/app/admin/(espace)/` (en-tête + déconnexion) ; la page de connexion est hors de ce groupe.
-- Session JWT de 8 h, `AUTH_SECRET` obligatoire dans `.env`.
+- Session JWT de 8 h fixes depuis la connexion (pas de prolongation), `AUTH_SECRET` obligatoire dans `.env`.
+- `requireAdmin()` appelle `connection()` : la session n'est jamais lue pendant un pré-rendu. Tout code qui utilise `new Date()`, `Math.random()` ou `crypto` dans un composant serveur doit, lui aussi, être précédé d'un accès à la requête (`connection()`, `cookies()`…).
 
 ## Organisation du code métier
 
@@ -39,6 +40,12 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - Création : `createReservationRequest` verrouille les ressources (`FOR UPDATE`, triées par id) dans une transaction. Ne jamais retirer ce verrou : `tests/integration/reservation-concurrency.test.ts` échoue sans lui.
 - Lien de suivi `/suivi/[jeton]` : jeton aléatoire de 32 octets, page non indexée et sans Referer.
 - Données de test : e-mails `test-e2e-…@example.com`, supprimées par le nettoyage e2e.
+
+## Statuts des réservations (machine à états)
+
+- Règles : `src/server/reservations/transitions.ts` (table de la section 7.2, actions admin / système, commentaire obligatoire). Le back-office n'affiche que les actions de `adminActionsFor(statut)`.
+- **Tout changement de statut passe par `applyTransition()`** (`transition-service.ts`) : verrou de la réservation, contrôle de la transition, effets (délai de paiement, dates de sortie/restitution), revérification du stock à l'acceptation, historique. Ne jamais modifier `Reservation.status` ailleurs.
+- Délai de paiement : paramètre `paiement.delaiHeures` (table Setting), 72 h par défaut.
 
 ## Stockage des fichiers (Supabase Storage)
 

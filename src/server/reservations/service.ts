@@ -20,15 +20,18 @@ import { BLOCKING_STATUSES } from "./status";
 type Db = Prisma.TransactionClient | typeof prisma;
 
 /** Réservations bloquantes qui chevauchent la période, pour ces ressources. */
-async function findBlockingBookings(
+export async function findBlockingBookings(
   db: Db,
   period: Period,
   resourceIds?: string[],
+  /** Réservation à ignorer (celle qu'on revérifie lors de l'acceptation). */
+  excludeReservationId?: string,
 ): Promise<ExistingBooking[]> {
   const items = await db.reservationItem.findMany({
     where: {
       ...(resourceIds ? { resourceId: { in: resourceIds } } : {}),
       reservation: {
+        ...(excludeReservationId ? { id: { not: excludeReservationId } } : {}),
         status: { in: [...BLOCKING_STATUSES] },
         startDate: { lte: toDbDate(period.end) },
         endDate: { gte: toDbDate(period.start) },
