@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +19,10 @@ import type { AuthenticatedAdmin } from "./credentials";
  * Redirige vers la page de connexion si l'accès est refusé.
  */
 export async function requireAdmin(): Promise<AuthenticatedAdmin> {
+  // Toujours au moment de la requête, jamais lors d'un pré-rendu : la session
+  // dépend du visiteur, et auth() génère un jeton aléatoire (CSRF) que
+  // Next.js interdit pendant le pré-rendu.
+  await connection();
   const session = await auth();
   const adminId = session?.user?.id;
   if (!adminId) redirect(ADMIN_LOGIN);

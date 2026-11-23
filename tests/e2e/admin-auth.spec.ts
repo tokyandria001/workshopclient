@@ -38,6 +38,29 @@ test.describe("Authentification du back-office", () => {
     await expect(page.getByText("Adresse e-mail invalide.")).toBeVisible();
   });
 
+  test("ne renvoie jamais le cookie de session hors connexion", async ({
+    page,
+  }) => {
+    // Si une page renvoyait le cookie de session (prolongation), une requête
+    // en arrière-plan terminée après la déconnexion pourrait recréer la
+    // session. Seules la connexion et la déconnexion écrivent ce cookie.
+    await page.goto("/admin");
+    await fillLogin(page, email, password);
+    await expect(page).toHaveURL(/\/admin$/, LOGIN_TIMEOUT);
+
+    for (const path of ["/admin", "/admin/ressources", "/admin/connexion"]) {
+      const response = await page.request.get(path, { maxRedirects: 0 });
+      const setCookie = response
+        .headersArray()
+        .filter((h) => h.name.toLowerCase() === "set-cookie")
+        .map((h) => h.value)
+        .join("\n");
+      expect(setCookie, `en-tête Set-Cookie sur ${path}`).not.toContain(
+        "session-token",
+      );
+    }
+  });
+
   test("connecte puis déconnecte l'administrateur", async ({ page }) => {
     await page.goto("/admin");
     await fillLogin(page, email, password);
