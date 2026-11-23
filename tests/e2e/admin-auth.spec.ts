@@ -54,6 +54,14 @@ test.describe("Authentification du back-office", () => {
 
     await page.getByRole("button", { name: "Se déconnecter" }).click();
     await expect(page).toHaveURL(/\/admin\/connexion$/, LOGIN_TIMEOUT);
+    // Le cookie de session doit avoir été supprimé.
+    await expect
+      .poll(async () =>
+        (await page.context().cookies()).some((cookie) =>
+          cookie.name.includes("authjs.session-token"),
+        ),
+      )
+      .toBe(false);
 
     // Après déconnexion, le back-office est de nouveau inaccessible.
     await page.goto("/admin");

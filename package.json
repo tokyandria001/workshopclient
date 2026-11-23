@@ -10,15 +10,16 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node scripts/run-vitest.mjs run",
-    "test:watch": "node scripts/run-vitest.mjs",
+    "test": "node scripts/run-vitest.mjs run --project unit",
+    "test:watch": "node scripts/run-vitest.mjs --project unit",
     "test:e2e": "playwright test",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "storage:setup": "tsx scripts/setup-storage.ts"
+    "storage:setup": "tsx scripts/setup-storage.ts",
+    "test:integration": "node scripts/run-vitest.mjs run --project integration"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",

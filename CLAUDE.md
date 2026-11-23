@@ -32,6 +32,14 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - **Toute action du back-office qui modifie une ressource doit appeler `updateTag(CATALOG_TAG)`** (via `refreshResourceViews()` dans `src/server/resources/actions.ts`) : le site est à jour immédiatement.
 - Données dépendant de l'URL (`params`, `searchParams`) ou de la session : les lire dans un composant sous `<Suspense>`. `notFound()` dans une zone streamée renvoie un statut 200 : tester le contenu affiché, pas le code HTTP.
 
+## Réservations
+
+- Dates de réservation : chaînes `AAAA-MM-JJ` dans le code, conversions uniquement via `src/lib/dates.ts` (`toDbDate` / `fromDbDate`, `todayInParis`).
+- Logique pure et testée : `src/server/availability/availability.ts` (pic journalier, statuts bloquants), `src/server/reservations/pricing.ts`, `rules.ts` (limites de période). Le formulaire réutilise ces fonctions pour l'affichage, le serveur recalcule tout.
+- Création : `createReservationRequest` verrouille les ressources (`FOR UPDATE`, triées par id) dans une transaction. Ne jamais retirer ce verrou : `tests/integration/reservation-concurrency.test.ts` échoue sans lui.
+- Lien de suivi `/suivi/[jeton]` : jeton aléatoire de 32 octets, page non indexée et sans Referer.
+- Données de test : e-mails `test-e2e-…@example.com`, supprimées par le nettoyage e2e.
+
 ## Stockage des fichiers (Supabase Storage)
 
 - `src/lib/storage.ts` (serveur uniquement, clé secrète). La base stocke le **chemin** dans le bucket, jamais l'URL ; URL publique via `resourceImageUrl()`.
@@ -51,7 +59,7 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 
 ## Commandes de vérification
 
-Avant de terminer une étape : `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, `npm run build`.
+Avant de terminer une étape : `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:integration`, `npm run test:e2e`, `npm run build`.
 
 Les tests e2e tournent sur le build de production, port 3100 (un `npm run dev` sur le port 3000 n'est pas réutilisé). `E2E_DEV=1` pour tester sur le serveur de développement.
 

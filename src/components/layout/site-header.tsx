@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+
 export function SiteHeader() {
   return (
     <header className="border-b">
@@ -13,6 +15,11 @@ export function SiteHeader() {
               <Link href="/catalogue" className="hover:underline">
                 Catalogue
               </Link>
+            </li>
+            <li>
+              <Button size="sm" asChild>
+                <Link href="/reserver">Réserver</Link>
+              </Button>
             </li>
           </ul>
         </nav>

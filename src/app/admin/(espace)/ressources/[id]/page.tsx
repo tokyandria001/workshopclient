@@ -59,7 +59,7 @@ async function EditResource({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-bold break-words">
+        <h1 className="font-heading text-2xl font-bold wrap-break-word">
           {resource.name}
         </h1>
         <div className="flex gap-1.5">

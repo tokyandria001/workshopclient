@@ -94,7 +94,7 @@ async function ResourceDetails({
           <Badge variant="secondary" className="w-fit">
             {RESOURCE_TYPE_LABELS[resource.type]}
           </Badge>
-          <h1 className="font-heading text-3xl font-bold tracking-tight break-words">
+          <h1 className="font-heading text-3xl font-bold tracking-tight wrap-break-word">
             {resource.name}
           </h1>
         </div>
@@ -136,8 +136,8 @@ async function ResourceDetails({
         <div className="whitespace-pre-line">{resource.description}</div>
 
         <div>
-          <Button size="lg" disabled className="w-full sm:w-auto">
-            Réserver (bientôt disponible)
+          <Button size="lg" asChild className="w-full sm:w-auto">
+            <Link href={`/reserver?ressource=${resource.id}`}>Réserver</Link>
           </Button>
         </div>
       </div>

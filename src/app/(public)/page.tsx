@@ -18,8 +18,11 @@ export default function HomePage() {
         <p className="max-w-prose text-base text-muted-foreground sm:text-lg">
           Louez notre salle de spectacle et du matériel événementiel en ligne.
         </p>
-        <div>
+        <div className="flex flex-wrap gap-3">
           <Button size="lg" asChild>
+            <Link href="/reserver">Réserver</Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
             <Link href="/catalogue">Voir le catalogue</Link>
           </Button>
         </div>

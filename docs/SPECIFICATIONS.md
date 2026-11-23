@@ -174,7 +174,7 @@ Un seul rôle administrateur dans le MVP (pas de gestion fine des permissions).
 - Une réservation occupe une ressource du **début** à la **fin** (dates incluses, granularité : la journée) _(à valider : journée ou demi-journée)_.
 - Seules les réservations aux statuts `EN_ATTENTE`, `A_PAYER`, `CONFIRMEE` et `EN_COURS` bloquent du stock.
 - **Salle** : disponible si aucune réservation bloquante ne chevauche la période.
-- **Matériel** : quantité disponible = quantité totale − somme des quantités des réservations bloquantes qui chevauchent la période.
+- **Matériel** : quantité disponible = quantité totale − **pic journalier** des quantités réservées sur la période, c'est-à-dire le maximum, sur chaque jour de la période, de la somme des quantités des réservations bloquantes qui couvrent ce jour. _(Décision du développeur : une somme simple sur toute la période refuserait des locations possibles, par exemple deux réservations successives qui ne se chevauchent pas entre elles.)_
 - La vérification est faite **côté serveur** au moment de l'envoi de la demande, puis de nouveau au moment de l'acceptation, pour éviter les doubles réservations.
 - **Concurrence** : une transaction seule ne suffit pas sous PostgreSQL (isolation `READ COMMITTED` par défaut). La vérification et l'écriture se font dans une transaction qui **verrouille les lignes `Resource` concernées** (`SELECT … FOR UPDATE`, dans un ordre stable par `id` pour éviter les interblocages). Deux demandes simultanées sur la même ressource sont ainsi traitées l'une après l'autre.
 - Les dates sont des **dates calendaires** (sans heure), interprétées dans le fuseau `Europe/Paris`. Deux réservations se chevauchent si `debutA <= finB` et `debutB <= finA`.
