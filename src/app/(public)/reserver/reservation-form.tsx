@@ -353,8 +353,23 @@ export function ReservationForm({ resources, today, preselectedId }: Props) {
             <Textarea id="message" name="message" rows={4} maxLength={2000} />
           </Field>
         </div>
-        {/* Piège à robots : invisible et ignoré par les humains. */}
-        <div aria-hidden="true" className="absolute left-[-9999px]">
+        {/* Piège à robots : invisible et ignoré par les humains. Masqué par
+            un style en ligne (prioritaire sur toute règle CSS), sans
+            display:none que certains robots savent repérer. */}
+        <div
+          aria-hidden="true"
+          data-testid="honeypot"
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: 0,
+            width: 1,
+            height: 1,
+            overflow: "hidden",
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        >
           <label htmlFor={HONEYPOT_FIELD}>Ne pas remplir</label>
           <input
             id={HONEYPOT_FIELD}

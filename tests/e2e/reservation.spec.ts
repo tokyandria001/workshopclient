@@ -92,6 +92,20 @@ test.describe("Demande de réservation", () => {
     await expect(page.getByText("Micro sans fil × 1")).toBeVisible();
   });
 
+  test("cache le champ piège anti-robots", async ({ page }) => {
+    await page.goto("/reserver");
+    const honeypot = page.getByTestId("honeypot");
+    await expect(honeypot).toBeAttached();
+    // On fait défiler jusqu'aux coordonnées, là où se trouve le champ piège.
+    await page.getByLabel("Prénom").scrollIntoViewIfNeeded();
+    // Hors de l'écran et transparent : invisible pour un visiteur.
+    await expect(honeypot).not.toBeInViewport();
+    await expect(honeypot).toHaveCSS("opacity", "0");
+    // Le champ « Prénom » n'est pas recouvert.
+    await expect(page.getByLabel("Prénom")).toBeInViewport();
+    await expect(page.getByText("Ne pas remplir")).not.toBeInViewport();
+  });
+
   test("affiche les erreurs d'un formulaire incomplet", async ({ page }) => {
     await page.goto("/reserver");
     await page.getByRole("button", { name: "Envoyer ma demande" }).click();
