@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { todayInParis } from "@/lib/dates";
@@ -37,6 +38,9 @@ async function ReservationFormLoader({
   const [params, resources] = await Promise.all([
     searchParams,
     getCatalog(null),
+    // La date du jour (todayInParis) doit être calculée à chaque requête,
+    // jamais figée lors du pré-rendu.
+    connection(),
   ]);
   const preselected =
     typeof params.ressource === "string" ? params.ressource : undefined;
