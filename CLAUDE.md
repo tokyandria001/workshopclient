@@ -12,6 +12,13 @@ La référence fonctionnelle est [docs/SPECIFICATIONS.md](docs/SPECIFICATIONS.md
 - Logique métier dans `src/server/`, indépendante des pages et testée unitairement. Toute donnée entrante validée avec Zod côté serveur.
 - Montants en centimes (entiers). Dates de réservation = dates calendaires, fuseau `Europe/Paris`.
 
+## Authentification du back-office (Auth.js v5)
+
+- `src/proxy.ts` ne fait qu'une redirection rapide (cookie uniquement) : **ce n'est pas une protection suffisante**.
+- **Chaque page, action serveur et route du back-office doit appeler `requireAdmin()`** (`@/server/auth/session`) avant toute lecture ou écriture. Dans une page, l'appeler dans un composant placé sous `<Suspense>` (exigence de Next.js 16 avec `cacheComponents`).
+- Pages du back-office dans `src/app/admin/(espace)/` (en-tête + déconnexion) ; la page de connexion est hors de ce groupe.
+- Session JWT de 8 h, `AUTH_SECRET` obligatoire dans `.env`.
+
 ## Base de données (Prisma 7 + Supabase)
 
 - Schéma : `prisma/schema.prisma`. Client généré dans `src/generated/prisma` (ignoré par Git, régénéré par `postinstall`). Importer `prisma` depuis `@/lib/prisma` (serveur uniquement), les types depuis `@/generated/prisma/client`.
